@@ -1,46 +1,36 @@
 package com.bus.tracking.bus_app.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import lombok.Data;
+import java.util.List;
 
+@Data
 @Entity
-@Table(name = "route")
+@Table(name = "routes")
 public class Route {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-
-    @Column(nullable = false)
-    private String source;
-
-    @Column(nullable = false)
-    private String destination;
-
-    @Column(nullable = false)
-    private float distance;
-
-    @ManyToOne
-    @JoinColumn(name = "bus_id", nullable = false)
+    
+    private String name;
+    
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
+    @OrderBy("stopOrder")
+    private List<Stop> stops;
+    
+    @OneToOne(mappedBy = "route")
     private Bus bus;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public String getSource() { return source; }
-    public void setSource(String source) { this.source = source; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getDestination() { return destination; }
-    public void setDestination(String destination) { this.destination = destination; }
-
-    public float getDistance() { return distance; }
-    public void setDistance(float distance) { this.distance = distance; }
+    public List<Stop> getStops() { return stops; }
+    public void setStops(List<Stop> stops) { this.stops = stops; }
 
     public Bus getBus() { return bus; }
     public void setBus(Bus bus) { this.bus = bus; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
 } 

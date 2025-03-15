@@ -1,12 +1,12 @@
 package com.bus.tracking.bus_app.service;
 
-import com.bus.tracking.bus_app.dto.RouteDto;
-import com.bus.tracking.bus_app.model.Bus;
-import com.bus.tracking.bus_app.model.Route;
+import com.bus.tracking.bus_app.model.*;
 import com.bus.tracking.bus_app.repository.RouteRepository;
+import com.bus.tracking.bus_app.repository.StopRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,15 +17,19 @@ public class RouteService {
     private RouteRepository routeRepository;
 
     @Autowired
+    private StopRepository stopRepository;
+
+    @Autowired
     private BusService busService;
 
-    public Route addRoute(RouteDto routeDto) {
-        Route route = new Route();
-        route.setSource(routeDto.getSource());
-        route.setDestination(routeDto.getDestination());
-        route.setDistance(routeDto.getDistance());
-        route.setBus(busService.getBusById(routeDto.getBusId())
-                .orElseThrow(() -> new RuntimeException("Bus not found")));
+    public Route createRoute(Route route) {
+        // Validate stops are in order
+        List<Stop> stops = route.getStops();
+        for (int i = 0; i < stops.size(); i++) {
+            Stop stop = stops.get(i);
+            stop.setStopOrder(i + 1);
+            stop.setRoute(route);
+        }
         return routeRepository.save(route);
     }
 
@@ -37,29 +41,46 @@ public class RouteService {
         return routeRepository.findByBusId(busId);
     }
 
-    public Optional<Route> getRouteById(String id) {
-        return routeRepository.findById(id);
+    public Route getRouteById(String id) {
+        return routeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Route not found with id: " + id));
     }
 
     public void addDummyRoutes() {
         if (routeRepository.count() == 0) {
             List<Bus> buses = busService.getAllBuses();
             if (!buses.isEmpty()) {
-                RouteDto[] dummyRoutes = {
-                    new RouteDto("New York", "Boston", 300, buses.get(0).getId()),
-                    new RouteDto("Boston", "Washington DC", 450, buses.get(0).getId()),
-                    new RouteDto("Chicago", "Detroit", 280, buses.get(1).getId()),
-                    new RouteDto("Detroit", "Toronto", 380, buses.get(1).getId()),
-                    new RouteDto("Los Angeles", "San Francisco", 380, buses.get(2).getId()),
-                    new RouteDto("San Francisco", "Seattle", 680, buses.get(2).getId()),
-                    new RouteDto("Miami", "Orlando", 230, buses.get(3).getId()),
-                    new RouteDto("Orlando", "Atlanta", 440, buses.get(3).getId()),
-                    new RouteDto("Dallas", "Houston", 240, buses.get(4).getId()),
-                    new RouteDto("Houston", "New Orleans", 350, buses.get(4).getId())
+                // Create minimal dummy routes with stops
+                String[][] routes = {
+                    {"New York", "Boston"},
+                    {"Boston", "Washington DC"}
                 };
 
-                for (RouteDto routeDto : dummyRoutes) {
-                    addRoute(routeDto);
+                for (int i = 0; i < routes.length && i < buses.size(); i++) {
+                    Route route = new Route();
+                    route.setName(routes[i][0] + " to " + routes[i][1]);
+                    
+                    List<Stop> stops = new ArrayList<>();
+                    
+                    // Create start stop
+                    Stop startStop = new Stop();
+                    startStop.setName(routes[i][0]);
+                    startStop.setLocation(routes[i][0] + " Station");
+                    stops.add(startStop);
+                    
+                    // Create end stop
+                    Stop endStop = new Stop();
+                    endStop.setName(routes[i][1]);
+                    endStop.setLocation(routes[i][1] + " Station");
+                    stops.add(endStop);
+                    
+                    route.setStops(stops);
+                    createRoute(route);
+                    
+                    // Update bus with route
+                    Bus bus = buses.get(i);
+                    bus.setRoute(route);
+                    busService.updateBus(bus);
                 }
             }
         }

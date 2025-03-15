@@ -32,14 +32,15 @@ public class BusService {
         return busRepository.findById(id);
     }
 
+    public Bus updateBus(Bus bus) {
+        return busRepository.save(bus);
+    }
+
     public void addDummyBuses() {
         if (busRepository.count() == 0) {
             BusDto[] dummyBuses = {
                 new BusDto("Express Deluxe", 50, BusType.EXPRESS),
-                new BusDto("Luxury Coach", 40, BusType.LUXURY),
-                new BusDto("Regular Bus", 60, BusType.REGULAR),
-                new BusDto("City Express", 45, BusType.EXPRESS),
-                new BusDto("Comfort Plus", 55, BusType.LUXURY)
+                new BusDto("Regular Bus", 60, BusType.REGULAR)
             };
 
             for (BusDto busDto : dummyBuses) {

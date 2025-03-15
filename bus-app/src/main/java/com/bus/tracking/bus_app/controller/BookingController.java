@@ -1,6 +1,5 @@
 package com.bus.tracking.bus_app.controller;
 
-import com.bus.tracking.bus_app.dto.TicketDto;
 import com.bus.tracking.bus_app.model.Bus;
 import com.bus.tracking.bus_app.model.Route;
 import com.bus.tracking.bus_app.model.Ticket;
@@ -13,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/booking")
@@ -35,18 +35,28 @@ public class BookingController {
         return ResponseEntity.ok(busService.getAllBuses());
     }
 
-    @GetMapping("/buses/{busId}/routes")
-    public ResponseEntity<List<Route>> getRoutesByBusId(@PathVariable String busId) {
+    @GetMapping("/buses/{busId}/stops")
+    public ResponseEntity<List<Route>> getStopsByBusId(@PathVariable String busId) {
         return ResponseEntity.ok(routeService.getRoutesByBusId(busId));
     }
 
     @PostMapping("/ticket")
-    public ResponseEntity<?> bookTicket(@RequestBody TicketDto ticketDto, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> bookTicket(
+            @RequestBody Map<String, String> request,
+            @RequestHeader("Authorization") String authHeader) {
         try {
             String token = authHeader.substring(7); // Remove "Bearer " prefix
             String passengerId = jwtService.extractUserId(token);
             
-            Ticket ticket = ticketService.bookTicket(ticketDto, passengerId);
+            String busId = request.get("busId");
+            String startStopId = request.get("startStopId");
+            String endStopId = request.get("endStopId");
+            
+            if (busId == null || startStopId == null || endStopId == null) {
+                return ResponseEntity.badRequest().body("Missing required parameters");
+            }
+            
+            Ticket ticket = ticketService.bookTicket(busId, startStopId, endStopId, passengerId);
             return ResponseEntity.ok(ticket);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

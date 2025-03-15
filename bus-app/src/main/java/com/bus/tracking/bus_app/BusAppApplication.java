@@ -25,7 +25,7 @@ public class BusAppApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) {
-		// Add dummy data
+		// Add minimal dummy data
 		busService.addDummyBuses();
 		routeService.addDummyRoutes();
 	}
