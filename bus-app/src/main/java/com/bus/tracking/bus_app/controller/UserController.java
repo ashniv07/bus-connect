@@ -43,11 +43,12 @@ public class UserController {
         );
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String jwt = jwtService.generateToken(userDetails);
+        User user = userService.loginUser(userDto);
+        String jwt = jwtService.generateToken(userDetails, user.getId());
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", jwt);
-        response.put("user", userService.loginUser(userDto));
+        response.put("user", user);
 
         return ResponseEntity.ok(response);
     }
