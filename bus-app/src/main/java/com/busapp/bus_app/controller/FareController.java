@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import com.busapp.bus_app.DTO.FareResponse;
 import com.busapp.bus_app.service.FareCalculationService;
 
+@CrossOrigin(origins = "*")
+
 @RestController
 public class FareController {
     @Autowired
